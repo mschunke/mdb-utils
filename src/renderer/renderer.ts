@@ -12,16 +12,26 @@ type FileSummary = {
 	tables: TableInfo[];
 };
 
-type ExportTableResult = {
-	saved: boolean;
-	outputPath?: string;
-	rows?: number;
+type ExportFormat = "csv" | "json";
+type ExportScope = "current" | "all";
+type ExportStructure = "single" | "multiple";
+
+type ExportOptions = {
+	filePath: string;
+	format: ExportFormat;
+	scope: ExportScope;
+	structure: ExportStructure;
+	tableName?: string;
+	delimiter?: string;
+	pretty?: boolean;
 };
 
-type ExportAllResult = {
+type ExportResult = {
 	saved: boolean;
+	outputPath?: string;
 	outputDir?: string;
 	files?: { table: string; file: string; rows: number }[];
+	rows?: number;
 };
 
 type AppInfo = {
@@ -44,12 +54,7 @@ type RendererApi = {
 		filePath: string,
 		tableName: string,
 	) => Promise<{ columns: string[]; rows: Record<string, unknown>[] }>;
-	exportTable: (
-		filePath: string,
-		tableName: string,
-		delimiter: string,
-	) => Promise<ExportTableResult>;
-	exportAll: (filePath: string, delimiter: string) => Promise<ExportAllResult>;
+	exportData: (opts: ExportOptions) => Promise<ExportResult>;
 	showItem: (path: string) => Promise<void>;
 	openExternal: (url: string) => Promise<void>;
 	getAppInfo: () => Promise<AppInfo>;
@@ -99,9 +104,7 @@ const $ = <T extends HTMLElement>(sel: string): T => {
 const els = {
 	openBtn: $<HTMLButtonElement>("#open-btn"),
 	openBtn2: $<HTMLButtonElement>("#open-btn-2"),
-	exportCurrent: $<HTMLButtonElement>("#export-current"),
-	exportAll: $<HTMLButtonElement>("#export-all"),
-	delimiter: $<HTMLSelectElement>("#delimiter"),
+	exportBtn: $<HTMLButtonElement>("#export-btn"),
 	fileName: $<HTMLSpanElement>("#file-name"),
 	filePath: $<HTMLSpanElement>("#file-path"),
 	tableCount: $<HTMLSpanElement>("#table-count"),
@@ -129,11 +132,6 @@ const els = {
 	loading: $<HTMLDivElement>("#loading"),
 	loadingText: $<HTMLDivElement>("#loading-text"),
 };
-
-function getDelimiter(): string {
-	const v = els.delimiter.value;
-	return v === "\\t" ? "\t" : v;
-}
 
 function showLoading(text: string): void {
 	els.loadingText.textContent = text;
@@ -379,7 +377,7 @@ async function selectTable(name: string): Promise<void> {
 		els.currentColCount.textContent = `${res.columns.length} cols`;
 		els.emptyState.hidden = true;
 		els.tableView.hidden = false;
-		els.exportCurrent.disabled = false;
+		els.exportBtn.disabled = false;
 		renderGrid();
 	} catch (err) {
 		showToast(
@@ -402,8 +400,7 @@ async function openFile(): Promise<void> {
 		state.currentRows = [];
 		els.fileName.textContent = summary.fileName;
 		els.filePath.textContent = summary.filePath;
-		els.exportAll.disabled = summary.tables.length === 0;
-		els.exportCurrent.disabled = true;
+		els.exportBtn.disabled = summary.tables.length === 0;
 		els.emptyState.hidden = false;
 		els.tableView.hidden = true;
 		renderTableList();
@@ -420,16 +417,12 @@ async function openFile(): Promise<void> {
 	}
 }
 
-async function exportCurrent(): Promise<void> {
-	if (!state.summary || !state.currentTable) return;
-	showLoading("Exporting CSV…");
+async function performExport(opts: ExportOptions): Promise<void> {
+	showLoading("Exporting…");
 	try {
-		const res = await window.api.exportTable(
-			state.summary.filePath,
-			state.currentTable,
-			getDelimiter(),
-		);
-		if (res.saved && res.outputPath) {
+		const res = await window.api.exportData(opts);
+		if (!res.saved) return;
+		if (res.outputPath) {
 			showToast(
 				`Exported ${res.rows?.toLocaleString() ?? 0} rows to ${res.outputPath}`,
 				"success",
@@ -438,28 +431,9 @@ async function exportCurrent(): Promise<void> {
 					onClick: () => void window.api.showItem(res.outputPath ?? ""),
 				},
 			);
-		}
-	} catch (err) {
-		showToast(
-			`Export failed: ${err instanceof Error ? err.message : String(err)}`,
-			"error",
-		);
-	} finally {
-		hideLoading();
-	}
-}
-
-async function exportAll(): Promise<void> {
-	if (!state.summary) return;
-	showLoading("Exporting all tables…");
-	try {
-		const res = await window.api.exportAll(
-			state.summary.filePath,
-			getDelimiter(),
-		);
-		if (res.saved && res.outputDir && res.files) {
+		} else if (res.outputDir && res.files) {
 			showToast(
-				`Exported ${res.files.length} tables to ${res.outputDir}`,
+				`Exported ${res.files.length} ${res.files.length === 1 ? "table" : "tables"} to ${res.outputDir}`,
 				"success",
 				{
 					label: "Open folder",
@@ -482,8 +456,7 @@ async function exportAll(): Promise<void> {
 
 els.openBtn.addEventListener("click", () => void openFile());
 els.openBtn2.addEventListener("click", () => void openFile());
-els.exportCurrent.addEventListener("click", () => void exportCurrent());
-els.exportAll.addEventListener("click", () => void exportAll());
+els.exportBtn.addEventListener("click", () => openExportModal());
 els.tableFilter.addEventListener("input", () => {
 	state.filter = els.tableFilter.value;
 	renderTableList();
@@ -585,6 +558,124 @@ document.addEventListener("click", (e) => {
 });
 
 window.api.onMenuAbout(() => void openAbout());
+
+// --- Export modal -----------------------------------------------------------
+
+const exportModal = $<HTMLDivElement>("#export-modal");
+const exportClose = $<HTMLButtonElement>("#export-close");
+const exportCancel = $<HTMLButtonElement>("#export-cancel");
+const exportConfirm = $<HTMLButtonElement>("#export-confirm");
+const exportPretty = $<HTMLInputElement>("#export-pretty");
+const exportDelimiter = $<HTMLSelectElement>("#export-delimiter");
+const exportDelimiterRow = $<HTMLLabelElement>("#export-delimiter-row");
+const exportPrettyRow = $<HTMLLabelElement>("#export-pretty-row");
+const exportStructureGroup = $<HTMLFieldSetElement>("#export-structure-group");
+const exportSingleLabel = $<HTMLSpanElement>("#export-single-label");
+const exportCurrentHint = $<HTMLSpanElement>("#export-current-hint");
+const exportAllHint = $<HTMLSpanElement>("#export-all-hint");
+
+function getRadio(name: string): string {
+	const el = document.querySelector<HTMLInputElement>(
+		`input[name="${name}"]:checked`,
+	);
+	return el?.value ?? "";
+}
+
+function setRadio(name: string, value: string): void {
+	const el = document.querySelector<HTMLInputElement>(
+		`input[name="${name}"][value="${value}"]`,
+	);
+	if (el) el.checked = true;
+}
+
+function refreshExportForm(): void {
+	const format = getRadio("export-format") as ExportFormat;
+	const scope = getRadio("export-scope") as ExportScope;
+
+	exportDelimiterRow.hidden = format !== "csv";
+	exportPrettyRow.hidden = format !== "json";
+
+	// Structure only matters for "all" scope
+	exportStructureGroup.hidden = scope !== "all";
+
+	// CSV cannot be combined into one file
+	const singleRadio = document.querySelector<HTMLInputElement>(
+		'input[name="export-structure"][value="single"]',
+	);
+	const singleLabel = singleRadio?.parentElement;
+	const csvAllSingleDisabled = scope === "all" && format === "csv";
+	if (singleRadio) singleRadio.disabled = csvAllSingleDisabled;
+	if (singleLabel)
+		singleLabel.setAttribute(
+			"aria-disabled",
+			csvAllSingleDisabled ? "true" : "false",
+		);
+	if (csvAllSingleDisabled && getRadio("export-structure") === "single") {
+		setRadio("export-structure", "multiple");
+	}
+
+	exportSingleLabel.textContent =
+		format === "json"
+			? "Single combined file ({ table: rows })"
+			: "Single combined file";
+}
+
+function openExportModal(): void {
+	if (!state.summary) return;
+	// Update hints
+	exportCurrentHint.textContent = state.currentTable
+		? `"${state.currentTable}"`
+		: "(no table selected)";
+	exportAllHint.textContent = `${state.summary.tables.length} tables`;
+	const currentRadio = document.querySelector<HTMLInputElement>(
+		'input[name="export-scope"][value="current"]',
+	);
+	if (currentRadio) currentRadio.disabled = !state.currentTable;
+	if (!state.currentTable) setRadio("export-scope", "all");
+	refreshExportForm();
+	exportModal.hidden = false;
+}
+
+function closeExportModal(): void {
+	exportModal.hidden = true;
+}
+
+function runExportFromModal(): void {
+	if (!state.summary) return;
+	const format = getRadio("export-format") as ExportFormat;
+	const scope = getRadio("export-scope") as ExportScope;
+	const structure = (getRadio("export-structure") ||
+		"single") as ExportStructure;
+	const delim = exportDelimiter.value === "\\t" ? "\t" : exportDelimiter.value;
+	const opts: ExportOptions = {
+		filePath: state.summary.filePath,
+		format,
+		scope,
+		structure: scope === "current" ? "single" : structure,
+		tableName: state.currentTable ?? undefined,
+		delimiter: delim,
+		pretty: exportPretty.checked,
+	};
+	closeExportModal();
+	void performExport(opts);
+}
+
+exportClose.addEventListener("click", closeExportModal);
+exportCancel.addEventListener("click", closeExportModal);
+exportConfirm.addEventListener("click", runExportFromModal);
+exportModal.addEventListener("click", (e) => {
+	if (e.target === exportModal) closeExportModal();
+});
+document.addEventListener("keydown", (e) => {
+	if (e.key === "Escape" && !exportModal.hidden) closeExportModal();
+});
+for (const name of ["export-format", "export-scope", "export-structure"]) {
+	for (const input of document.querySelectorAll<HTMLInputElement>(
+		`input[name="${name}"]`,
+	)) {
+		input.addEventListener("change", refreshExportForm);
+	}
+}
 
 // Show the About modal briefly on startup as a splash.
 void (async () => {

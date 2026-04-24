@@ -12,16 +12,22 @@ export type FileSummary = {
 	tables: TableInfo[];
 };
 
-export type ExportTableResult = {
-	saved: boolean;
-	outputPath?: string;
-	rows?: number;
+export type ExportOptions = {
+	filePath: string;
+	format: "csv" | "json";
+	scope: "current" | "all";
+	structure: "single" | "multiple";
+	tableName?: string;
+	delimiter?: string;
+	pretty?: boolean;
 };
 
-export type ExportAllResult = {
+export type ExportResult = {
 	saved: boolean;
+	outputPath?: string;
 	outputDir?: string;
 	files?: { table: string; file: string; rows: number }[];
+	rows?: number;
 };
 
 export type AppInfo = {
@@ -44,12 +50,7 @@ export type RendererApi = {
 		filePath: string,
 		tableName: string,
 	) => Promise<{ columns: string[]; rows: Record<string, unknown>[] }>;
-	exportTable: (
-		filePath: string,
-		tableName: string,
-		delimiter: string,
-	) => Promise<ExportTableResult>;
-	exportAll: (filePath: string, delimiter: string) => Promise<ExportAllResult>;
+	exportData: (opts: ExportOptions) => Promise<ExportResult>;
 	showItem: (path: string) => Promise<void>;
 	openExternal: (url: string) => Promise<void>;
 	getAppInfo: () => Promise<AppInfo>;
@@ -62,10 +63,7 @@ const api: RendererApi = {
 	openMdbPath: (filePath) => ipcRenderer.invoke("mdb:open", filePath),
 	getTable: (filePath, tableName) =>
 		ipcRenderer.invoke("mdb:getTable", filePath, tableName),
-	exportTable: (filePath, tableName, delimiter) =>
-		ipcRenderer.invoke("mdb:exportTable", filePath, tableName, delimiter),
-	exportAll: (filePath, delimiter) =>
-		ipcRenderer.invoke("mdb:exportAll", filePath, delimiter),
+	exportData: (opts) => ipcRenderer.invoke("mdb:export", opts),
 	showItem: (p) => ipcRenderer.invoke("shell:showItem", p),
 	openExternal: (url) => ipcRenderer.invoke("shell:openExternal", url),
 	getAppInfo: () => ipcRenderer.invoke("app:getInfo"),

@@ -5,7 +5,9 @@ import {
 	getTable,
 	openReader,
 	rowsToCsv,
+	rowsToJsonValue,
 	writeCsvFile,
+	writeTextFile,
 	type Row,
 } from "../shared/mdb.js";
 
@@ -186,65 +188,120 @@ ipcMain.handle(
 );
 
 ipcMain.handle(
-	"mdb:exportTable",
+	"mdb:export",
 	async (
 		_evt,
-		filePath: string,
-		tableName: string,
-		delimiter: string,
-	): Promise<{ saved: boolean; outputPath?: string; rows?: number }> => {
-		if (!mainWindow) return { saved: false };
-		const safe = tableName.replace(/[^A-Za-z0-9._-]+/g, "_");
-		const result = await dialog.showSaveDialog(mainWindow, {
-			title: `Export "${tableName}" to CSV`,
-			defaultPath: `${safe}.csv`,
-			filters: [{ name: "CSV", extensions: ["csv"] }],
-		});
-		if (result.canceled || !result.filePath) return { saved: false };
-
-		const reader = await openReader(filePath);
-		const table = getTable(reader, tableName);
-		const columns = table.getColumnNames();
-		const rows = table.getData() as Row[];
-		const csv = rowsToCsv(columns, rows, delimiter || ",");
-		writeCsvFile(result.filePath, csv);
-		return { saved: true, outputPath: result.filePath, rows: rows.length };
-	},
-);
-
-ipcMain.handle(
-	"mdb:exportAll",
-	async (
-		_evt,
-		filePath: string,
-		delimiter: string,
+		opts: {
+			filePath: string;
+			format: "csv" | "json";
+			scope: "current" | "all";
+			structure: "single" | "multiple";
+			tableName?: string;
+			delimiter?: string;
+			pretty?: boolean;
+		},
 	): Promise<{
 		saved: boolean;
+		outputPath?: string;
 		outputDir?: string;
 		files?: { table: string; file: string; rows: number }[];
+		rows?: number;
 	}> => {
 		if (!mainWindow) return { saved: false };
-		const result = await dialog.showOpenDialog(mainWindow, {
-			title: "Choose folder for CSV exports",
-			properties: ["openDirectory", "createDirectory"],
-		});
-		if (result.canceled || result.filePaths.length === 0) {
-			return { saved: false };
-		}
-		const outDir = result.filePaths[0];
-		mkdirSync(outDir, { recursive: true });
+		const {
+			filePath,
+			format,
+			scope,
+			structure,
+			tableName,
+			delimiter = ",",
+			pretty = true,
+		} = opts;
+		const ext = format;
+		const indent = pretty ? 2 : 0;
 
 		const reader = await openReader(filePath);
+
+		// Single table → single file
+		if (scope === "current") {
+			if (!tableName) return { saved: false };
+			const table = getTable(reader, tableName);
+			const columns = table.getColumnNames();
+			const rows = table.getData() as Row[];
+			const safe = tableName.replace(/[^A-Za-z0-9._-]+/g, "_");
+			const result = await dialog.showSaveDialog(mainWindow, {
+				title: `Export "${tableName}" to ${format.toUpperCase()}`,
+				defaultPath: `${safe}.${ext}`,
+				filters: [{ name: format.toUpperCase(), extensions: [ext] }],
+			});
+			if (result.canceled || !result.filePath) return { saved: false };
+			if (format === "csv") {
+				writeCsvFile(result.filePath, rowsToCsv(columns, rows, delimiter));
+			} else {
+				writeTextFile(
+					result.filePath,
+					JSON.stringify(rowsToJsonValue(rows), null, indent),
+				);
+			}
+			return {
+				saved: true,
+				outputPath: result.filePath,
+				rows: rows.length,
+			};
+		}
+
+		// All tables → single combined file (JSON only; CSV falls back to multiple)
+		if (scope === "all" && structure === "single" && format === "json") {
+			const safe = path.basename(filePath).replace(/\.[^.]+$/, "") || "tables";
+			const result = await dialog.showSaveDialog(mainWindow, {
+				title: "Export all tables to a single JSON file",
+				defaultPath: `${safe}.json`,
+				filters: [{ name: "JSON", extensions: ["json"] }],
+			});
+			if (result.canceled || !result.filePath) return { saved: false };
+			const tableNames = reader.getTableNames();
+			const combined: Record<string, unknown[]> = {};
+			let rowsTotal = 0;
+			for (const name of tableNames) {
+				const table = reader.getTable(name);
+				const rows = table.getData() as Row[];
+				combined[name] = rowsToJsonValue(rows);
+				rowsTotal += rows.length;
+			}
+			writeTextFile(result.filePath, JSON.stringify(combined, null, indent));
+			return {
+				saved: true,
+				outputPath: result.filePath,
+				rows: rowsTotal,
+			};
+		}
+
+		// All tables → one file per table (CSV or JSON)
+		const dirRes = await dialog.showOpenDialog(mainWindow, {
+			title: `Choose folder for ${format.toUpperCase()} exports`,
+			properties: ["openDirectory", "createDirectory"],
+		});
+		if (dirRes.canceled || dirRes.filePaths.length === 0) {
+			return { saved: false };
+		}
+		const outDir = dirRes.filePaths[0];
+		mkdirSync(outDir, { recursive: true });
 		const tableNames = reader.getTableNames();
 		const files: { table: string; file: string; rows: number }[] = [];
 		for (const name of tableNames) {
 			const table = reader.getTable(name);
 			const columns = table.getColumnNames();
 			const rows = table.getData() as Row[];
-			const csv = rowsToCsv(columns, rows, delimiter || ",");
 			const safe = name.replace(/[^A-Za-z0-9._-]+/g, "_");
-			const file = path.join(outDir, `${safe}.csv`);
-			writeCsvFile(file, csv);
+			const file = path.join(outDir, `${safe}.${ext}`);
+			if (format === "csv") {
+				writeCsvFile(file, rowsToCsv(columns, rows, delimiter));
+			} else {
+				writeTextFile(
+					file,
+					JSON.stringify(rowsToJsonValue(rows), null, indent),
+				);
+			}
 			files.push({ table: name, file, rows: rows.length });
 		}
 		return { saved: true, outputDir: outDir, files };

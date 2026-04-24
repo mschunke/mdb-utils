@@ -77,3 +77,20 @@ export function getTable(reader: MDBReaderType, name: string) {
 export function writeCsvFile(filePath: string, csv: string): void {
 	writeFileSync(path.resolve(filePath), csv, "utf8");
 }
+
+export function writeTextFile(filePath: string, content: string): void {
+	writeFileSync(path.resolve(filePath), content, "utf8");
+}
+
+export function rowsToJsonValue(rows: Row[]): unknown[] {
+	return rows.map((r) => {
+		const out: Record<string, unknown> = {};
+		for (const [k, v] of Object.entries(r)) {
+			if (v instanceof Date) out[k] = v.toISOString();
+			else if (typeof Buffer !== "undefined" && Buffer.isBuffer(v))
+				out[k] = v.toString("base64");
+			else out[k] = v;
+		}
+		return out;
+	});
+}

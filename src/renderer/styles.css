@@ -658,3 +658,74 @@ button.large {
 	background: var(--row-hover);
 	color: var(--text);
 }
+
+.export-form {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	margin: 8px 0 20px;
+}
+
+.export-group {
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 8px 12px 10px;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.export-group legend {
+	padding: 0 6px;
+	color: var(--text-muted);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.export-group label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.export-group label .hint {
+	color: var(--text-muted);
+	font-size: 11px;
+	margin-left: auto;
+}
+
+.export-group label[aria-disabled="true"] {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.export-options {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.export-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.export-option select {
+	background: var(--bg-elev-2);
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	padding: 4px 6px;
+	margin-left: auto;
+}
+
+.export-option[hidden] {
+	display: none !important;
+}

@@ -17,17 +17,7 @@
 				<span id="file-path" class="muted"></span>
 			</div>
 			<div class="spacer"></div>
-			<label class="delimiter">
-				Delimiter
-				<select id="delimiter">
-					<option value=",">, (comma)</option>
-					<option value=";">; (semicolon)</option>
-					<option value="\t">\t (tab)</option>
-					<option value="|">| (pipe)</option>
-				</select>
-			</label>
-			<button id="export-current" disabled>Export current → CSV</button>
-			<button id="export-all" disabled>Export all → CSVs</button>
+			<button id="export-btn" disabled>Export…</button>
 			<button id="about-btn" title="About" aria-label="About">?</button>
 		</header>
 
@@ -119,6 +109,86 @@
 		<div id="loading" class="loading-overlay" hidden>
 			<div class="spinner"></div>
 			<div id="loading-text">Loading…</div>
+		</div>
+
+		<div id="export-modal" class="modal-overlay" hidden>
+			<div class="modal" role="dialog" aria-labelledby="export-title">
+				<button id="export-close" class="modal-close" aria-label="Close">×</button>
+				<h2 id="export-title">Export data</h2>
+				<p class="modal-tagline">
+					Choose a format and what to export. Sort and filter only affect the
+					on-screen view; exports always include the full table data.
+				</p>
+
+				<div class="export-form">
+					<fieldset class="export-group">
+						<legend>Format</legend>
+						<label
+							><input type="radio" name="export-format" value="csv" checked />
+							CSV</label
+						>
+						<label
+							><input type="radio" name="export-format" value="json" /> JSON</label
+						>
+					</fieldset>
+
+					<fieldset class="export-group">
+						<legend>Scope</legend>
+						<label
+							><input type="radio" name="export-scope" value="current" checked />
+							<span>Current table</span>
+							<span class="hint" id="export-current-hint"></span>
+						</label>
+						<label
+							><input type="radio" name="export-scope" value="all" />
+							<span>All tables</span>
+							<span class="hint" id="export-all-hint"></span>
+						</label>
+					</fieldset>
+
+					<fieldset class="export-group" id="export-structure-group">
+						<legend>Structure</legend>
+						<label
+							><input
+								type="radio"
+								name="export-structure"
+								value="single"
+								checked
+							/>
+							<span id="export-single-label">Single combined file</span>
+						</label>
+						<label
+							><input
+								type="radio"
+								name="export-structure"
+								value="multiple"
+							/>
+							<span>One file per table</span>
+						</label>
+					</fieldset>
+
+					<div class="export-options">
+						<label class="export-option" id="export-delimiter-row">
+							CSV delimiter
+							<select id="export-delimiter">
+								<option value=",">, (comma)</option>
+								<option value=";">; (semicolon)</option>
+								<option value="\t">\t (tab)</option>
+								<option value="|">| (pipe)</option>
+							</select>
+						</label>
+						<label class="export-option" id="export-pretty-row">
+							<input type="checkbox" id="export-pretty" checked />
+							Pretty-print JSON
+						</label>
+					</div>
+				</div>
+
+				<div class="modal-actions">
+					<button id="export-cancel">Cancel</button>
+					<button id="export-confirm" class="primary">Export…</button>
+				</div>
+			</div>
 		</div>
 
 		<div id="about-modal" class="modal-overlay" hidden>
