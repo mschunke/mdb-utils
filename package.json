@@ -1,6 +1,6 @@
 {
   "name": "mdb-utils",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Desktop & CLI utilities for working with Microsoft Access (.mdb) files",
   "main": "dist/electron/main.js",
   "bin": {
