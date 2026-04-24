@@ -1,6 +1,17 @@
-# MDB Utils
+<p align="center">
+  <img src="build/icon.png" alt="MDB Utils" width="128" height="128" />
+</p>
 
-Desktop & CLI utilities for working with Microsoft Access (`.mdb` / `.accdb`) files.
+<h1 align="center">MDB Utils</h1>
+
+<p align="center">
+  Desktop &amp; CLI utilities for working with Microsoft Access
+  (<code>.mdb</code> / <code>.accdb</code>) files.
+</p>
+
+<p align="center">
+  <a href="https://mschunke.github.io/mdb-utils/"><strong>🌐 Visit the app page →</strong></a>
+</p>
 
 - Browse tables and rows in a native desktop UI (Electron).
 - Export individual tables or all tables to CSV.
