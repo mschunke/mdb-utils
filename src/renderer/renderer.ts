@@ -24,6 +24,19 @@ type ExportAllResult = {
 	files?: { table: string; file: string; rows: number }[];
 };
 
+type AppInfo = {
+	name: string;
+	version: string;
+	electron: string;
+	node: string;
+	chrome: string;
+	platform: string;
+	arch: string;
+	repository: string;
+	author: string;
+	sponsor: { name: string; url: string };
+};
+
 type RendererApi = {
 	openMdb: () => Promise<FileSummary | null>;
 	openMdbPath: (filePath: string) => Promise<FileSummary>;
@@ -38,7 +51,10 @@ type RendererApi = {
 	) => Promise<ExportTableResult>;
 	exportAll: (filePath: string, delimiter: string) => Promise<ExportAllResult>;
 	showItem: (path: string) => Promise<void>;
+	openExternal: (url: string) => Promise<void>;
+	getAppInfo: () => Promise<AppInfo>;
 	onMenuOpen: (cb: () => void) => () => void;
+	onMenuAbout: (cb: () => void) => () => void;
 };
 
 declare global {
@@ -522,3 +538,50 @@ els.pageSize.addEventListener("change", () => {
 });
 
 window.api.onMenuOpen(() => void openFile());
+
+const aboutModal = $<HTMLDivElement>("#about-modal");
+const aboutVersion = $<HTMLSpanElement>("#about-version");
+const aboutRuntime = $<HTMLDivElement>("#about-runtime");
+const aboutClose = $<HTMLButtonElement>("#about-close");
+const aboutBtn = $<HTMLButtonElement>("#about-btn");
+
+let aboutInfoLoaded = false;
+async function openAbout(): Promise<void> {
+	if (!aboutInfoLoaded) {
+		try {
+			const info = await window.api.getAppInfo();
+			aboutVersion.textContent = info.version;
+			aboutRuntime.textContent = `Electron ${info.electron} · Node ${info.node} · ${info.platform}/${info.arch}`;
+			aboutInfoLoaded = true;
+		} catch {
+			aboutVersion.textContent = "unknown";
+		}
+	}
+	aboutModal.hidden = false;
+}
+
+function closeAbout(): void {
+	aboutModal.hidden = true;
+}
+
+aboutBtn.addEventListener("click", () => void openAbout());
+aboutClose.addEventListener("click", closeAbout);
+aboutModal.addEventListener("click", (e) => {
+	if (e.target === aboutModal) closeAbout();
+});
+document.addEventListener("keydown", (e) => {
+	if (e.key === "Escape" && !aboutModal.hidden) closeAbout();
+});
+document.addEventListener("click", (e) => {
+	const target = e.target as HTMLElement | null;
+	if (!target) return;
+	const link = target.closest<HTMLElement>("[data-href]");
+	if (!link) return;
+	const href = link.getAttribute("data-href");
+	if (href) {
+		e.preventDefault();
+		void window.api.openExternal(href);
+	}
+});
+
+window.api.onMenuAbout(() => void openAbout());

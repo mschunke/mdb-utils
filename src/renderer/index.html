@@ -28,6 +28,7 @@
 			</label>
 			<button id="export-current" disabled>Export current → CSV</button>
 			<button id="export-all" disabled>Export all → CSVs</button>
+			<button id="about-btn" title="About" aria-label="About">?</button>
 		</header>
 
 		<main class="layout">
@@ -118,6 +119,55 @@
 		<div id="loading" class="loading-overlay" hidden>
 			<div class="spinner"></div>
 			<div id="loading-text">Loading…</div>
+		</div>
+
+		<div id="about-modal" class="modal-overlay" hidden>
+			<div class="modal" role="dialog" aria-labelledby="about-title">
+				<button id="about-close" class="modal-close" aria-label="Close">×</button>
+				<h2 id="about-title">MDB Utils</h2>
+				<p class="modal-version">Version <span id="about-version">—</span></p>
+				<p class="modal-tagline">
+					Desktop &amp; CLI utilities for browsing Microsoft Access
+					(<code>.mdb</code> / <code>.accdb</code>) databases and exporting to CSV.
+				</p>
+
+				<dl class="modal-meta">
+					<dt>Created by</dt>
+					<dd>Murilo Schünke</dd>
+
+					<dt>Sponsored by</dt>
+					<dd>
+						<a href="#" data-href="https://intercode.dev" class="ext-link"
+							>Intercode</a
+						>
+					</dd>
+
+					<dt>Source</dt>
+					<dd>
+						<a
+							href="#"
+							data-href="https://github.com/mschunke/mdb-utils"
+							class="ext-link"
+							>github.com/mschunke/mdb-utils</a
+						>
+					</dd>
+
+					<dt>Runtime</dt>
+					<dd id="about-runtime" class="muted"></dd>
+				</dl>
+
+				<div class="modal-actions">
+					<button
+						data-href="https://github.com/mschunke/mdb-utils"
+						class="ext-link primary"
+					>
+						Open GitHub
+					</button>
+					<button data-href="https://intercode.dev" class="ext-link">
+						Visit intercode.dev
+					</button>
+				</div>
+			</div>
 		</div>
 
 		<script type="module" src="./renderer.js"></script>

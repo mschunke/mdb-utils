@@ -124,6 +124,20 @@ function buildMenu(): void {
 			],
 		},
 		{ role: "windowMenu" },
+		{
+			role: "help",
+			submenu: [
+				{
+					label: "About MDB Utils",
+					click: () => mainWindow?.webContents.send("menu:about"),
+				},
+				{
+					label: "GitHub Repository",
+					click: () =>
+						void shell.openExternal("https://github.com/mschunke/mdb-utils"),
+				},
+			],
+		},
 	];
 
 	Menu.setApplicationMenu(Menu.buildFromTemplate(template));
@@ -239,6 +253,27 @@ ipcMain.handle(
 
 ipcMain.handle("shell:showItem", async (_evt, fullPath: string) => {
 	shell.showItemInFolder(fullPath);
+});
+
+ipcMain.handle("shell:openExternal", async (_evt, url: string) => {
+	if (/^https?:\/\//i.test(url)) {
+		await shell.openExternal(url);
+	}
+});
+
+ipcMain.handle("app:getInfo", async () => {
+	return {
+		name: "MDB Utils",
+		version: app.getVersion(),
+		electron: process.versions.electron,
+		node: process.versions.node,
+		chrome: process.versions.chrome,
+		platform: process.platform,
+		arch: process.arch,
+		repository: "https://github.com/mschunke/mdb-utils",
+		author: "Murilo Schünke",
+		sponsor: { name: "Intercode", url: "https://intercode.dev" },
+	};
 });
 
 function readSummary(filePath: string): Promise<FileSummary> {
