@@ -28,7 +28,10 @@
     "csv",
     "electron"
   ],
-  "author": "",
+  "author": {
+    "name": "Murilo Schünke",
+    "email": "hello@intercode.dev"
+  },
   "license": "ISC",
   "repository": {
     "type": "git",
