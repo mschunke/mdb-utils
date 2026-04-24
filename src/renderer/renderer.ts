@@ -47,7 +47,8 @@ declare global {
 	}
 }
 
-const PAGE_SIZE = 500;
+const PAGE_SIZE_DEFAULT = 100;
+type PageSize = number | "all";
 
 type TableSort =
 	| "original"
@@ -65,6 +66,7 @@ const state = {
 	currentRows: [] as Record<string, unknown>[],
 	derivedRows: [] as Record<string, unknown>[],
 	page: 0,
+	pageSize: PAGE_SIZE_DEFAULT as PageSize,
 	filter: "",
 	tableSort: "original" as TableSort,
 	rowFilter: "",
@@ -101,8 +103,11 @@ const els = {
 	gridHead: $<HTMLTableSectionElement>("#data-grid thead"),
 	gridBody: $<HTMLTableSectionElement>("#data-grid tbody"),
 	pager: $<HTMLDivElement>("#pager"),
+	pageSize: $<HTMLSelectElement>("#page-size"),
+	firstPage: $<HTMLButtonElement>("#first-page"),
 	prevPage: $<HTMLButtonElement>("#prev-page"),
 	nextPage: $<HTMLButtonElement>("#next-page"),
+	lastPage: $<HTMLButtonElement>("#last-page"),
 	pageInfo: $<HTMLSpanElement>("#page-info"),
 	toast: $<HTMLDivElement>("#toast"),
 	loading: $<HTMLDivElement>("#loading"),
@@ -260,11 +265,13 @@ function renderGrid(): void {
 
 	const rows = state.derivedRows;
 	const total = rows.length;
-	const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+	const pageSize =
+		state.pageSize === "all" ? Math.max(total, 1) : state.pageSize;
+	const totalPages = Math.max(1, Math.ceil(total / pageSize));
 	if (state.page >= totalPages) state.page = totalPages - 1;
 	if (state.page < 0) state.page = 0;
-	const start = state.page * PAGE_SIZE;
-	const end = Math.min(start + PAGE_SIZE, total);
+	const start = state.page * pageSize;
+	const end = Math.min(start + pageSize, total);
 	const slice = rows.slice(start, end);
 
 	const frag = document.createDocumentFragment();
@@ -299,18 +306,25 @@ function renderGrid(): void {
 			? `${total.toLocaleString()}`
 			: `${total.toLocaleString()} of ${totalSource.toLocaleString()}`;
 	els.currentRenderedCount.textContent =
-		total > PAGE_SIZE
-			? `showing ${start + 1}–${end} of ${suffix}`
-			: `showing all ${suffix}`;
+		total === 0
+			? `no rows (${totalSource.toLocaleString()} total)`
+			: end - start < total
+				? `showing ${start + 1}–${end} of ${suffix}`
+				: `showing all ${suffix}`;
 
-	if (total > PAGE_SIZE) {
-		els.pager.hidden = false;
-		els.pageInfo.textContent = `Page ${state.page + 1} of ${totalPages}`;
-		els.prevPage.disabled = state.page === 0;
-		els.nextPage.disabled = state.page >= totalPages - 1;
-	} else {
-		els.pager.hidden = true;
-	}
+	els.pager.hidden = false;
+	els.pageInfo.textContent = `Page ${state.page + 1} of ${totalPages}`;
+	els.firstPage.disabled = state.page === 0;
+	els.prevPage.disabled = state.page === 0;
+	els.nextPage.disabled = state.page >= totalPages - 1;
+	els.lastPage.disabled = state.page >= totalPages - 1;
+}
+
+function lastPageIndex(): number {
+	const total = state.derivedRows.length;
+	const pageSize =
+		state.pageSize === "all" ? Math.max(total, 1) : state.pageSize;
+	return Math.max(0, Math.ceil(total / pageSize) - 1);
 }
 
 function cycleSort(column: string): void {
@@ -482,7 +496,28 @@ els.prevPage.addEventListener("click", () => {
 	}
 });
 els.nextPage.addEventListener("click", () => {
-	state.page++;
+	if (state.page < lastPageIndex()) {
+		state.page++;
+		renderGrid();
+	}
+});
+els.firstPage.addEventListener("click", () => {
+	if (state.page !== 0) {
+		state.page = 0;
+		renderGrid();
+	}
+});
+els.lastPage.addEventListener("click", () => {
+	const last = lastPageIndex();
+	if (state.page !== last) {
+		state.page = last;
+		renderGrid();
+	}
+});
+els.pageSize.addEventListener("change", () => {
+	const v = els.pageSize.value;
+	state.pageSize = v === "all" ? "all" : Number.parseInt(v, 10);
+	state.page = 0;
 	renderGrid();
 });
 

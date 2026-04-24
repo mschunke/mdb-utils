@@ -91,9 +91,24 @@
 						</table>
 					</div>
 					<div id="pager" class="pager" hidden>
-						<button id="prev-page">‹ Prev</button>
-						<span id="page-info"></span>
-						<button id="next-page">Next ›</button>
+						<label class="page-size">
+							Page size
+							<select id="page-size">
+								<option value="10">10</option>
+								<option value="50">50</option>
+								<option value="100" selected>100</option>
+								<option value="500">500</option>
+								<option value="1000">1000</option>
+								<option value="all">All</option>
+							</select>
+						</label>
+						<div class="pager-nav">
+							<button id="first-page" title="First page">«</button>
+							<button id="prev-page">‹ Prev</button>
+							<span id="page-info"></span>
+							<button id="next-page">Next ›</button>
+							<button id="last-page" title="Last page">»</button>
+						</div>
 					</div>
 				</div>
 			</section>
