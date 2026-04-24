@@ -11,7 +11,7 @@ site.
 ## TL;DR
 
 ```bash
-# from a clean main branch
+# from a clean master branch
 npm run release:patch    # or release:minor / release:major
 ```
 
@@ -30,7 +30,7 @@ These only need to be done once per repository. Skip if already configured.
    → set to **Read and write permissions**. This lets the release workflow
    create releases and upload assets using the built-in `GITHUB_TOKEN`.
 2. **Settings → Pages → Build and deployment → Source**
-   → set to **GitHub Actions**. The first push to `main` that touches
+   → set to **GitHub Actions**. The first push to `master` that touches
    `docs/` will then deploy the site.
 3. (Optional) Code-signing secrets. Without them, builds run unsigned —
    macOS users see a Gatekeeper prompt the first time they open the app and
@@ -47,7 +47,7 @@ These only need to be done once per repository. Skip if already configured.
 
 Before bumping a version:
 
-- [ ] You are on the `main` branch.
+- [ ] You are on the `master` branch.
 - [ ] `git status` is clean (no uncommitted or untracked files).
 - [ ] `git pull` shows no incoming changes.
 - [ ] All PRs intended for this release have been merged.
@@ -56,7 +56,7 @@ Before bumping a version:
       the change you're releasing.
 
 The bump script will refuse to proceed if the working tree is dirty or you're
-not on `main`, but it's faster to catch issues yourself.
+not on `master`, but it's faster to catch issues yourself.
 
 ---
 
@@ -83,7 +83,7 @@ node scripts/bump-version.mjs 1.4.0-beta.1
 
 `scripts/bump-version.mjs` performs the following steps in order:
 
-1. Verifies the working tree is clean and the branch is `main`.
+1. Verifies the working tree is clean and the branch is `master`.
 2. Runs `git pull --ff-only` to make sure you're up to date.
 3. Runs `npm version <bump>` which:
    - Updates `version` in `package.json` and `package-lock.json`.
@@ -119,7 +119,7 @@ Assets produced per platform:
 | Windows  | `MDB Utils Setup X.Y.Z.exe` (NSIS), `MDB Utils X.Y.Z.exe` (portable) |
 | Linux    | `MDB Utils-X.Y.Z.AppImage`, `mdb-utils_X.Y.Z_amd64.deb` |
 
-Meanwhile, `.github/workflows/build.yml` runs on every push to `main` (i.e.
+Meanwhile, `.github/workflows/build.yml` runs on every push to `master` (i.e.
 on every PR merge) and produces the same installers as **workflow artifacts**
 that live for 14 days. Those are useful for testing changes between releases
 without cutting a tag.
@@ -176,7 +176,7 @@ After the workflow turns green:
 
 If a release is broken in the wild:
 
-1. Branch off `main`, fix the bug, open a PR, merge.
+1. Branch off `master`, fix the bug, open a PR, merge.
 2. Run `npm run release:patch` to ship the fix.
 3. Optionally edit the broken release on GitHub and check **"Set as
    pre-release"** so the Pages site (which queries `/releases/latest`)
@@ -211,4 +211,4 @@ To remove a bad release:
    git tag -d vX.Y.Z
    git push origin :refs/tags/vX.Y.Z
    ```
-4. (Optional) Revert the version-bump commit on `main` and ship a new patch.
+4. (Optional) Revert the version-bump commit on `master` and ship a new patch.

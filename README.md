@@ -43,10 +43,10 @@ npm run release:major   # 1.0.0 -> 2.0.0
 
 ## CI
 
-- Every push to `main` (e.g. after a PR merge) builds the app on macOS,
+- Every push to `master` (e.g. after a PR merge) builds the app on macOS,
   Windows and Linux and uploads the installers as workflow artifacts.
 - Every `v*` tag push creates a GitHub Release with installers attached.
-- The `docs/` folder is published to GitHub Pages on every push to `main`.
+- The `docs/` folder is published to GitHub Pages on every push to `master`.
 
 ## License
 

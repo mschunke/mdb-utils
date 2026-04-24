@@ -32,8 +32,8 @@ if (status) {
 }
 
 const branch = shOut('git rev-parse --abbrev-ref HEAD');
-if (branch !== 'main') {
-	console.error(`Refusing to bump version from branch "${branch}". Switch to main.`);
+if (branch !== 'master') {
+	console.error(`Refusing to bump version from branch "${branch}". Switch to master.`);
 	process.exit(1);
 }
 
