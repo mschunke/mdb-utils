@@ -49,13 +49,27 @@ declare global {
 
 const PAGE_SIZE = 500;
 
+type TableSort =
+	| "original"
+	| "name-asc"
+	| "name-desc"
+	| "rows-asc"
+	| "rows-desc";
+
+type SortDir = "asc" | "desc";
+
 const state = {
 	summary: null as FileSummary | null,
 	currentTable: null as string | null,
 	currentColumns: [] as string[],
 	currentRows: [] as Record<string, unknown>[],
+	derivedRows: [] as Record<string, unknown>[],
 	page: 0,
 	filter: "",
+	tableSort: "original" as TableSort,
+	rowFilter: "",
+	sortColumn: null as string | null,
+	sortDir: "asc" as SortDir,
 };
 
 const $ = <T extends HTMLElement>(sel: string): T => {
@@ -75,6 +89,9 @@ const els = {
 	tableCount: $<HTMLSpanElement>("#table-count"),
 	tableList: $<HTMLUListElement>("#table-list"),
 	tableFilter: $<HTMLInputElement>("#table-filter"),
+	tableSort: $<HTMLSelectElement>("#table-sort"),
+	rowFilter: $<HTMLInputElement>("#row-filter"),
+	clearSort: $<HTMLButtonElement>("#clear-sort"),
 	emptyState: $<HTMLDivElement>("#empty-state"),
 	tableView: $<HTMLDivElement>("#table-view"),
 	currentTableName: $<HTMLHeadingElement>("#current-table-name"),
@@ -132,7 +149,23 @@ function renderTableList(): void {
 	const filter = state.filter.toLowerCase();
 	const filtered = filter
 		? tables.filter((t) => t.name.toLowerCase().includes(filter))
-		: tables;
+		: tables.slice();
+
+	switch (state.tableSort) {
+		case "name-asc":
+			filtered.sort((a, b) => a.name.localeCompare(b.name));
+			break;
+		case "name-desc":
+			filtered.sort((a, b) => b.name.localeCompare(a.name));
+			break;
+		case "rows-asc":
+			filtered.sort((a, b) => a.rowCount - b.rowCount);
+			break;
+		case "rows-desc":
+			filtered.sort((a, b) => b.rowCount - a.rowCount);
+			break;
+	}
+
 	els.tableCount.textContent = String(tables.length);
 	els.tableList.innerHTML = "";
 	for (const t of filtered) {
@@ -152,6 +185,48 @@ function renderTableList(): void {
 	}
 }
 
+function compareValues(a: unknown, b: unknown): number {
+	const aNull = a === null || a === undefined;
+	const bNull = b === null || b === undefined;
+	if (aNull && bNull) return 0;
+	if (aNull) return 1;
+	if (bNull) return -1;
+	if (typeof a === "number" && typeof b === "number") return a - b;
+	if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
+	if (typeof a === "boolean" && typeof b === "boolean")
+		return a === b ? 0 : a ? 1 : -1;
+	const as = String(a);
+	const bs = String(b);
+	const an = Number(as);
+	const bn = Number(bs);
+	if (!Number.isNaN(an) && !Number.isNaN(bn) && as !== "" && bs !== "")
+		return an - bn;
+	return as.localeCompare(bs, undefined, { numeric: true });
+}
+
+function recomputeDerivedRows(): void {
+	const filter = state.rowFilter.trim().toLowerCase();
+	let rows = state.currentRows;
+	if (filter) {
+		rows = rows.filter((r) => {
+			for (const c of state.currentColumns) {
+				const v = r[c];
+				if (v === null || v === undefined) continue;
+				const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+				if (s.toLowerCase().includes(filter)) return true;
+			}
+			return false;
+		});
+	}
+	if (state.sortColumn) {
+		const col = state.sortColumn;
+		const dir = state.sortDir === "asc" ? 1 : -1;
+		rows = rows.slice().sort((a, b) => compareValues(a[col], b[col]) * dir);
+	}
+	state.derivedRows = rows;
+	els.clearSort.disabled = state.sortColumn === null;
+}
+
 function renderGrid(): void {
 	els.gridHead.innerHTML = "";
 	els.gridBody.innerHTML = "";
@@ -165,18 +240,32 @@ function renderGrid(): void {
 	headRow.appendChild(numTh);
 	for (const c of cols) {
 		const th = document.createElement("th");
-		th.textContent = c;
-		th.title = c;
+		th.classList.add("sortable");
+		th.title = `${c} — click to sort`;
+		const label = document.createElement("span");
+		label.textContent = c;
+		const indicator = document.createElement("span");
+		indicator.className = "sort-indicator";
+		if (state.sortColumn === c) {
+			th.classList.add(state.sortDir === "asc" ? "sort-asc" : "sort-desc");
+			indicator.textContent = state.sortDir === "asc" ? "▲" : "▼";
+		}
+		th.append(label, indicator);
+		th.addEventListener("click", () => {
+			cycleSort(c);
+		});
 		headRow.appendChild(th);
 	}
 	els.gridHead.appendChild(headRow);
 
-	const total = state.currentRows.length;
+	const rows = state.derivedRows;
+	const total = rows.length;
 	const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 	if (state.page >= totalPages) state.page = totalPages - 1;
+	if (state.page < 0) state.page = 0;
 	const start = state.page * PAGE_SIZE;
 	const end = Math.min(start + PAGE_SIZE, total);
-	const slice = state.currentRows.slice(start, end);
+	const slice = rows.slice(start, end);
 
 	const frag = document.createDocumentFragment();
 	for (let i = 0; i < slice.length; i++) {
@@ -204,10 +293,15 @@ function renderGrid(): void {
 	}
 	els.gridBody.appendChild(frag);
 
+	const totalSource = state.currentRows.length;
+	const suffix =
+		total === totalSource
+			? `${total.toLocaleString()}`
+			: `${total.toLocaleString()} of ${totalSource.toLocaleString()}`;
 	els.currentRenderedCount.textContent =
 		total > PAGE_SIZE
-			? `showing ${start + 1}–${end} of ${total.toLocaleString()}`
-			: `showing all ${total.toLocaleString()}`;
+			? `showing ${start + 1}–${end} of ${suffix}`
+			: `showing all ${suffix}`;
 
 	if (total > PAGE_SIZE) {
 		els.pager.hidden = false;
@@ -219,16 +313,36 @@ function renderGrid(): void {
 	}
 }
 
+function cycleSort(column: string): void {
+	if (state.sortColumn !== column) {
+		state.sortColumn = column;
+		state.sortDir = "asc";
+	} else if (state.sortDir === "asc") {
+		state.sortDir = "desc";
+	} else {
+		state.sortColumn = null;
+		state.sortDir = "asc";
+	}
+	state.page = 0;
+	recomputeDerivedRows();
+	renderGrid();
+}
+
 async function selectTable(name: string): Promise<void> {
 	if (!state.summary) return;
 	state.currentTable = name;
 	state.page = 0;
+	state.sortColumn = null;
+	state.sortDir = "asc";
+	state.rowFilter = "";
+	els.rowFilter.value = "";
 	renderTableList();
 	showLoading(`Loading ${name}…`);
 	try {
 		const res = await window.api.getTable(state.summary.filePath, name);
 		state.currentColumns = res.columns;
 		state.currentRows = res.rows;
+		recomputeDerivedRows();
 		const info = state.summary.tables.find((t) => t.name === name);
 		els.currentTableName.textContent = name;
 		els.currentRowCount.textContent = `${(info?.rowCount ?? res.rows.length).toLocaleString()} rows`;
@@ -343,6 +457,23 @@ els.exportAll.addEventListener("click", () => void exportAll());
 els.tableFilter.addEventListener("input", () => {
 	state.filter = els.tableFilter.value;
 	renderTableList();
+});
+els.tableSort.addEventListener("change", () => {
+	state.tableSort = els.tableSort.value as TableSort;
+	renderTableList();
+});
+els.rowFilter.addEventListener("input", () => {
+	state.rowFilter = els.rowFilter.value;
+	state.page = 0;
+	recomputeDerivedRows();
+	renderGrid();
+});
+els.clearSort.addEventListener("click", () => {
+	state.sortColumn = null;
+	state.sortDir = "asc";
+	state.page = 0;
+	recomputeDerivedRows();
+	renderGrid();
 });
 els.prevPage.addEventListener("click", () => {
 	if (state.page > 0) {

@@ -180,6 +180,25 @@ button.large {
 	flex: 1;
 }
 
+.sidebar-sort {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 10px 8px;
+	color: var(--text-muted);
+	font-size: 11px;
+}
+
+.sidebar-sort select {
+	flex: 1;
+	background: var(--bg-elev-2);
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	padding: 4px 6px;
+	font-size: 12px;
+}
+
 .table-list li {
 	padding: 6px 10px;
 	border-radius: 4px;
@@ -255,6 +274,39 @@ button.large {
 	font-size: 15px;
 }
 
+.table-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.grid-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.grid-controls input[type="search"] {
+	background: var(--bg-elev-2);
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	padding: 5px 10px;
+	min-width: 200px;
+	outline: none;
+	font-size: 12px;
+}
+
+.grid-controls input[type="search"]:focus {
+	border-color: var(--accent);
+}
+
+.grid-controls button {
+	padding: 4px 10px;
+	font-size: 12px;
+}
+
 .table-header .meta {
 	color: var(--text-muted);
 	font-size: 12px;
@@ -300,6 +352,27 @@ button.large {
 	font-weight: 400;
 	font-size: 10px;
 	color: var(--text-muted);
+}
+
+#data-grid thead th.sortable {
+	cursor: pointer;
+	user-select: none;
+}
+
+#data-grid thead th.sortable:hover {
+	background: var(--row-hover);
+}
+
+#data-grid thead th .sort-indicator {
+	margin-left: 6px;
+	font-size: 10px;
+	color: var(--accent);
+	opacity: 0;
+}
+
+#data-grid thead th.sort-asc .sort-indicator,
+#data-grid thead th.sort-desc .sort-indicator {
+	opacity: 1;
 }
 
 #data-grid tbody td {

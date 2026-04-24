@@ -42,6 +42,16 @@
 					placeholder="Filter tables…"
 					autocomplete="off"
 				/>
+				<div class="sidebar-sort">
+					<label for="table-sort">Sort</label>
+					<select id="table-sort">
+						<option value="original">Original order</option>
+						<option value="name-asc">Name (A→Z)</option>
+						<option value="name-desc">Name (Z→A)</option>
+						<option value="rows-desc">Rows (high→low)</option>
+						<option value="rows-asc">Rows (low→high)</option>
+					</select>
+				</div>
 				<ul id="table-list" class="table-list"></ul>
 			</aside>
 
@@ -54,7 +64,18 @@
 
 				<div id="table-view" hidden>
 					<div class="table-header">
+					<div class="table-header-row">
 						<h2 id="current-table-name"></h2>
+						<div class="grid-controls">
+							<input
+								type="search"
+								id="row-filter"
+								placeholder="Filter rows…"
+								autocomplete="off"
+							/>
+							<button id="clear-sort" title="Clear sort" disabled>Clear sort</button>
+						</div>
+					</div>
 						<div class="meta">
 							<span id="current-row-count"></span>
 							<span class="dot">•</span>
