@@ -6,18 +6,22 @@
 		<title>MDB Utils — Browse & export Microsoft Access files</title>
 		<meta
 			name="description"
-			content="Free desktop & CLI tools for browsing Microsoft Access (.mdb / .accdb) files and exporting tables to CSV. macOS, Windows and Linux."
+			content="Free desktop & CLI tools for browsing Microsoft Access (.mdb / .accdb) files and exporting tables to CSV or JSON. macOS, Windows and Linux."
 		/>
+		<link rel="icon" type="image/svg+xml" href="./icon.svg" />
+		<link rel="icon" type="image/png" href="./icon.png" />
+		<link rel="apple-touch-icon" href="./icon.png" />
 		<link rel="stylesheet" href="./styles.css" />
 	</head>
 	<body>
 		<header class="hero">
 			<div class="container">
+				<img class="hero-logo" src="./icon.svg" alt="MDB Utils logo" width="96" height="96" />
 				<h1>MDB Utils</h1>
 				<p class="tagline">
 					Browse Microsoft Access (<code>.mdb</code> / <code>.accdb</code>)
-					files and export their tables to CSV — from a clean desktop UI or
-					straight from the command line.
+					files and export their tables to CSV or JSON — from a clean
+					desktop UI or straight from the command line.
 				</p>
 				<div class="cta">
 					<a id="download-mac" class="btn primary" href="#downloads">Download for macOS</a>
@@ -55,14 +59,32 @@
 				<div class="feature">
 					<h2>Export to CSV</h2>
 					<p>
-						One click to export the current table — or every table at once —
-						with a configurable delimiter.
+						Save the current table or every table at once, with a
+						configurable delimiter and proper quoting for values that contain
+						commas, quotes or newlines.
+					</p>
+				</div>
+				<div class="feature">
+					<h2>Export to JSON</h2>
+					<p>
+						Dump a single table, every table as separate <code>.json</code>
+						files, or the whole database as one combined JSON document —
+						with optional pretty-printing.
+					</p>
+				</div>
+				<div class="feature">
+					<h2>Smart value handling</h2>
+					<p>
+						Dates are serialised as ISO-8601, binary fields as base64, and
+						nested objects as JSON — so exports stay round-trippable.
 					</p>
 				</div>
 				<div class="feature">
 					<h2>CLI included</h2>
 					<p>
-						Script exports from your terminal. Run
+						Script exports from your terminal with
+						<code>list-tables</code>, <code>show</code>,
+						<code>export</code> and <code>export-all</code>. Run
 						<code>mdb-utils --help</code> after install.
 					</p>
 				</div>
@@ -87,10 +109,42 @@
 					>.
 				</p>
 			</section>
+
+			<section id="license" class="license">
+				<h2>License</h2>
+				<p>
+					MDB Utils is released under the
+					<a
+						href="https://github.com/mschunke/mdb-utils/blob/master/LICENSE.md"
+						target="_blank"
+						rel="noopener"
+						>ISC License</a
+					>. The software is provided <strong>"as is"</strong>, without
+					warranty of any kind, express or implied. Use it at your own risk —
+					the authors and contributors are not liable for any damages or data
+					loss arising from its use.
+				</p>
+			</section>
 		</main>
 
 		<footer>
 			<div class="container">
+				<p class="credits">
+					Crafted by
+					<a
+						href="https://github.com/mschunke"
+						target="_blank"
+						rel="noopener"
+						>Murilo Schünke</a
+					>
+					· Sponsored by
+					<a
+						href="https://intercode.dev"
+						target="_blank"
+						rel="noopener"
+						>Intercode</a
+					>
+				</p>
 				<p class="muted">
 					© <span id="year"></span> MDB Utils ·
 					<a
