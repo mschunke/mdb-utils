@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+		/>
+		<title>MDB Utils</title>
+		<link rel="stylesheet" href="./styles.css" />
+	</head>
+	<body>
+		<header class="toolbar">
+			<button id="open-btn" class="primary">Open .mdb…</button>
+			<div class="file-info">
+				<span id="file-name">No file loaded</span>
+				<span id="file-path" class="muted"></span>
+			</div>
+			<div class="spacer"></div>
+			<label class="delimiter">
+				Delimiter
+				<select id="delimiter">
+					<option value=",">, (comma)</option>
+					<option value=";">; (semicolon)</option>
+					<option value="\t">\t (tab)</option>
+					<option value="|">| (pipe)</option>
+				</select>
+			</label>
+			<button id="export-current" disabled>Export current → CSV</button>
+			<button id="export-all" disabled>Export all → CSVs</button>
+		</header>
+
+		<main class="layout">
+			<aside class="sidebar">
+				<div class="sidebar-header">
+					<span>Tables</span>
+					<span id="table-count" class="badge">0</span>
+				</div>
+				<input
+					type="search"
+					id="table-filter"
+					placeholder="Filter tables…"
+					autocomplete="off"
+				/>
+				<ul id="table-list" class="table-list"></ul>
+			</aside>
+
+			<section class="content">
+				<div id="empty-state" class="empty-state">
+					<h1>MDB Utils</h1>
+					<p>Open a Microsoft Access (<code>.mdb</code> / <code>.accdb</code>) file to browse its tables and export them as CSV.</p>
+					<button id="open-btn-2" class="primary large">Open .mdb…</button>
+				</div>
+
+				<div id="table-view" hidden>
+					<div class="table-header">
+						<h2 id="current-table-name"></h2>
+						<div class="meta">
+							<span id="current-row-count"></span>
+							<span class="dot">•</span>
+							<span id="current-col-count"></span>
+							<span class="dot">•</span>
+							<span id="current-rendered-count" class="muted"></span>
+						</div>
+					</div>
+					<div class="grid-wrap">
+						<table id="data-grid">
+							<thead></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<div id="pager" class="pager" hidden>
+						<button id="prev-page">‹ Prev</button>
+						<span id="page-info"></span>
+						<button id="next-page">Next ›</button>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<div id="toast" class="toast" hidden></div>
+		<div id="loading" class="loading-overlay" hidden>
+			<div class="spinner"></div>
+			<div id="loading-text">Loading…</div>
+		</div>
+
+		<script type="module" src="./renderer.js"></script>
+	</body>
+</html>
