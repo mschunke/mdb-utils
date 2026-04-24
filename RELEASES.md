@@ -106,10 +106,13 @@ Pushing the `vX.Y.Z` tag triggers `.github/workflows/release.yml`:
 
 1. A matrix job runs on `macos-latest`, `windows-latest` and `ubuntu-latest`.
 2. Each runner installs deps with `npm ci` and runs the platform-specific
-   `electron-builder` command with `--publish always`.
-3. `electron-builder` creates a draft GitHub Release named after the tag
-   (the first runner) or appends assets to the existing draft (subsequent
-   runners), then publishes it once all assets are uploaded.
+   `electron-builder` command with `--publish never`.
+3. `.blockmap` files and `latest*.yml` metadata (used only by
+   `electron-updater`, which this app doesn't ship) are stripped from
+   `release/`.
+4. The remaining installers are uploaded to a GitHub Release named after
+   the tag via `softprops/action-gh-release`. The first runner creates the
+   release; subsequent runners append their assets to the same release.
 
 Assets produced per platform:
 
