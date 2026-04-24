@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>MDB Utils — Browse & export Microsoft Access files</title>
+		<meta
+			name="description"
+			content="Free desktop & CLI tools for browsing Microsoft Access (.mdb / .accdb) files and exporting tables to CSV. macOS, Windows and Linux."
+		/>
+		<link rel="stylesheet" href="./styles.css" />
+	</head>
+	<body>
+		<header class="hero">
+			<div class="container">
+				<h1>MDB Utils</h1>
+				<p class="tagline">
+					Browse Microsoft Access (<code>.mdb</code> / <code>.accdb</code>)
+					files and export their tables to CSV — from a clean desktop UI or
+					straight from the command line.
+				</p>
+				<div class="cta">
+					<a id="download-mac" class="btn primary" href="#downloads">Download for macOS</a>
+					<a id="download-win" class="btn" href="#downloads">Windows</a>
+					<a id="download-linux" class="btn" href="#downloads">Linux</a>
+				</div>
+				<p class="version muted">
+					Latest version: <span id="latest-version">…</span>
+					·
+					<a
+						href="https://github.com/mschunke/mdb-utils"
+						target="_blank"
+						rel="noopener"
+						>View on GitHub</a
+					>
+				</p>
+			</div>
+		</header>
+
+		<main class="container">
+			<section class="features">
+				<div class="feature">
+					<h2>Open any .mdb / .accdb</h2>
+					<p>
+						No Office or ODBC driver required. Powered by
+						<code>mdb-reader</code>, runs fully offline.
+					</p>
+				</div>
+				<div class="feature">
+					<h2>Inspect tables fast</h2>
+					<p>
+						Filter, sort and paginate large tables without freezing the UI.
+					</p>
+				</div>
+				<div class="feature">
+					<h2>Export to CSV</h2>
+					<p>
+						One click to export the current table — or every table at once —
+						with a configurable delimiter.
+					</p>
+				</div>
+				<div class="feature">
+					<h2>CLI included</h2>
+					<p>
+						Script exports from your terminal. Run
+						<code>mdb-utils --help</code> after install.
+					</p>
+				</div>
+			</section>
+
+			<section id="downloads" class="downloads">
+				<h2>Downloads</h2>
+				<p class="muted">
+					Pick a build for your platform. All installers are produced from the
+					same tagged commit on GitHub Actions.
+				</p>
+				<div id="assets" class="asset-grid">
+					<p class="muted">Loading latest release…</p>
+				</div>
+				<p class="muted">
+					Looking for older builds? See the
+					<a
+						href="https://github.com/mschunke/mdb-utils/releases"
+						target="_blank"
+						rel="noopener"
+						>full release history</a
+					>.
+				</p>
+			</section>
+		</main>
+
+		<footer>
+			<div class="container">
+				<p class="muted">
+					© <span id="year"></span> MDB Utils ·
+					<a
+						href="https://github.com/mschunke/mdb-utils"
+						target="_blank"
+						rel="noopener"
+						>Source</a
+					>
+					·
+					<a
+						href="https://github.com/mschunke/mdb-utils/issues"
+						target="_blank"
+						rel="noopener"
+						>Report an issue</a
+					>
+				</p>
+			</div>
+		</footer>
+
+		<script src="./app.js"></script>
+	</body>
+</html>

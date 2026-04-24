@@ -17,7 +17,10 @@
     "dist": "npm run build && electron-builder -mwl",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
-    "dist:linux": "npm run build && electron-builder --linux"
+    "dist:linux": "npm run build && electron-builder --linux",
+    "release:patch": "node scripts/bump-version.mjs patch",
+    "release:minor": "node scripts/bump-version.mjs minor",
+    "release:major": "node scripts/bump-version.mjs major"
   },
   "keywords": [
     "mdb",
@@ -27,6 +30,14 @@
   ],
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mschunke/mdb-utils.git"
+  },
+  "homepage": "https://mschunke.github.io/mdb-utils/",
+  "bugs": {
+    "url": "https://github.com/mschunke/mdb-utils/issues"
+  },
   "dependencies": {
     "commander": "^14.0.3",
     "mdb-reader": "^3.2.0"
@@ -44,6 +55,13 @@
     "directories": {
       "output": "release"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "mschunke",
+        "repo": "mdb-utils"
+      }
+    ],
     "files": [
       "dist/**/*",
       "build/icon.*",
