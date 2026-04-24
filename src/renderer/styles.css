@@ -555,6 +555,35 @@ button.large {
 	font-size: 20px;
 }
 
+.modal-header {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin-bottom: 14px;
+}
+
+.modal-icon {
+	width: 64px;
+	height: 64px;
+	border-radius: 12px;
+	flex-shrink: 0;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.modal-header-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.modal-header-text h2 {
+	margin: 0;
+}
+
+.modal-header-text .modal-version {
+	margin: 0;
+}
+
 .modal-version {
 	margin: 0 0 14px;
 	color: var(--text-muted);

@@ -585,3 +585,9 @@ document.addEventListener("click", (e) => {
 });
 
 window.api.onMenuAbout(() => void openAbout());
+
+// Show the About modal briefly on startup as a splash.
+void (async () => {
+	await openAbout();
+	window.setTimeout(closeAbout, 2000);
+})();

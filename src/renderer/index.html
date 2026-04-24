@@ -124,8 +124,18 @@
 		<div id="about-modal" class="modal-overlay" hidden>
 			<div class="modal" role="dialog" aria-labelledby="about-title">
 				<button id="about-close" class="modal-close" aria-label="Close">×</button>
-				<h2 id="about-title">MDB Utils</h2>
-				<p class="modal-version">Version <span id="about-version">—</span></p>
+				<div class="modal-header">
+					<img
+						id="about-icon"
+						src="./icon.png"
+						alt="MDB Utils icon"
+						class="modal-icon"
+					/>
+					<div class="modal-header-text">
+						<h2 id="about-title">MDB Utils</h2>
+						<p class="modal-version">Version <span id="about-version">—</span></p>
+					</div>
+				</div>
 				<p class="modal-tagline">
 					Desktop &amp; CLI utilities for browsing Microsoft Access
 					(<code>.mdb</code> / <code>.accdb</code>) databases and exporting to CSV.
