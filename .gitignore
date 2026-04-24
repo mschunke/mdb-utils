@@ -1,5 +1,6 @@
 node_modules
 *.mdb
+*.p12
 dist
 release
 .DS_Store

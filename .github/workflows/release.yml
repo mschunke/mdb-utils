@@ -38,8 +38,13 @@ jobs:
       - name: Build installers
         run: ${{ matrix.build_cmd }} -- --publish never
         env:
-          # No signing certificates configured yet — disable to avoid failure.
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # macOS code signing + notarization. Only the macOS runner uses these;
+          # they are harmless empty strings on Windows/Linux runners.
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Strip auto-updater metadata (blockmaps + latest*.yml)
         shell: bash
